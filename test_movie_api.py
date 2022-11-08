@@ -1,12 +1,29 @@
 import time
-from unittest import TestCase
+from unittest import IsolatedAsyncioTestCase
 
-from movie_api import get_movie_title_and_show_times
+from movie_api import get_movie_title_and_show_times, get_movie_title, get_movie_show_times, \
+    get_movie_title_and_show_times_async, get_multiple_movies
 
 
-class TestMovieApi(TestCase):
+class TestMovieApi(IsolatedAsyncioTestCase):
     def test_mean_girls_show_times(self):
         response = get_movie_title_and_show_times(377092)
+        self.assertEqual(
+            response,
+            {
+                'title': 'Mean Girls',
+                'monday': '14:00',
+                'tuesday': '13:00',
+                'wednesday': '17:00',
+                'thursday': '22:00',
+                'friday': '15:00',
+                'saturday': '18:00',
+                'sunday': '16:00',
+            }
+        )
+
+    async def test_mean_girls_show_times_async(self):
+        response = await get_movie_title_and_show_times_async(377092)
         self.assertEqual(
             response,
             {
@@ -28,10 +45,48 @@ class TestMovieApi(TestCase):
 
         self.assertLess(end, 1)
 
-    def test_all_movies_and_times(self):
-        response = {}
-        # TODO: somehow get all movie titles and show times
+    async def test_mean_girls_show_times_async_performance(self):
+        start = time.time()
+        await get_movie_title_and_show_times_async(377092)
+        end = time.time() - start
 
+        self.assertLess(end, 1)
+
+    def test_get_title_of_movie(self):
+        response = get_movie_title_and_show_times(88247)
+
+        self.assertEqual(
+            "The Terminator",
+            response['title']
+        )
+
+    async def test_get_movie_title(self):
+        response = await get_movie_title(88247)
+
+        self.assertEqual(
+            "The Terminator",
+            response['title']
+        )
+
+    async def test_get_movie_show_times(self):
+        show_times = await get_movie_show_times(88247)
+        self.assertEqual(
+            {'monday': '22:00',
+             'tuesday': '10:00',
+             'wednesday': '18:00',
+             'thursday': '16:00',
+             'friday': '10:00',
+             'saturday': '13:00',
+             'sunday': '21:00'
+             },
+            show_times
+        )
+
+    async def test_all_movies_and_times(self):
+        response = await get_multiple_movies({
+            # 10954600, 338526, 120347, 6710474, 120737, 88763, 78748, 120735, 88247, 377092
+            10954600
+        })
         self.assertEqual(
             response,
             {
